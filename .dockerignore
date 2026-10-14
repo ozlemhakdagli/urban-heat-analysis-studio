@@ -1,6 +1,8 @@
 # The image needs only backend/, frontend/package*.json and frontend/src.
 .git
-data
+data/raw
+data/backups
+data/results
 notebooks
 frontend/node_modules
 frontend/dist

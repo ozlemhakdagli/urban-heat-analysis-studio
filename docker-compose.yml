@@ -1,0 +1,12 @@
+services:
+  planner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: urban-green-planner:latest
+    container_name: urban-green-planner
+    ports:
+      - "8000:8000"
+    environment:
+      - PLANNER_DATA=/app/data
+    restart: unless-stopped
