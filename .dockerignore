@@ -1,0 +1,21 @@
+# The image needs only backend/, frontend/package*.json and frontend/src.
+.git
+data
+notebooks
+frontend/node_modules
+frontend/dist
+**/__pycache__
+*.md
+.env
+.env.*
+.venv
+.gitignore
+.dockerignore
+Dockerfile*
+environment.yml
+node_modules
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.log
