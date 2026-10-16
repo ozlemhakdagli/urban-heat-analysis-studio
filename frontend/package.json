@@ -1,5 +1,5 @@
 {
-  "name": "urban-green-planner-frontend",
+  "name": "urban-heat-analysis-studio-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "leaflet": "^1.9.4",
+    "marked": "^18.1.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-leaflet": "^5.0.0",

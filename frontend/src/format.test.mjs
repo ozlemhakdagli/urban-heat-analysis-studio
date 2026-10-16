@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { parseAmount, pointsToHa } from './format.js'
+import { translations, interpolate } from './i18n.js'
 
 test('parseAmount reads Turkish thousands separators', () => {
   assert.equal(parseAmount('10.000'), 10000)
@@ -42,4 +43,18 @@ test('parseAmount reads the printed minus sign and refuses mixed separators', ()
   assert.equal(parseAmount('1.500.000,5'), 1500000.5)
   assert.equal(parseAmount('1500,5'), 1500.5)
   assert.equal(parseAmount('1234567,89'), 1234567.89)
+})
+
+test('i18n en and tr dictionaries have identical key sets and non-empty strings', () => {
+  const enKeys = Object.keys(translations.en).sort()
+  const trKeys = Object.keys(translations.tr).sort()
+  assert.deepEqual(enKeys, trKeys, 'en and tr dictionaries must have the exact same keys')
+  for (const key of enKeys) {
+    assert.ok(translations.en[key].length > 0, `en.${key} should not be empty`)
+    assert.ok(translations.tr[key].length > 0, `tr.${key} should not be empty`)
+  }
+})
+
+test('interpolate replaces placeholders correctly', () => {
+  assert.equal(interpolate('Hello {name}, {temp} °C', { name: 'Odunpazarı', temp: '25.5' }), 'Hello Odunpazarı, 25.5 °C')
 })

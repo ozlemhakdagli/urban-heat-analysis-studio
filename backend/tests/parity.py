@@ -88,7 +88,7 @@ def main():
         assert len(meta["provinces"]) == 81 and len(districts) == 973 and sum(d["has_data"] for d in districts) == 829
         assert len(client.get("/api/top-risk?n=20").json()) == 20
         overview = client.get("/api/geo/overview")
-        assert overview.status_code == 200 and len(overview.json()["features"]) == 973 and len(overview.content) < 3_000_000
+        assert overview.status_code == 200 and len(overview.json()["features"]) == 973 and len(overview.content) < 6_000_000
         assert client.get(f"/api/geo/district/{code}").json()["geometry"]["type"] in ("Polygon", "MultiPolygon")
         info = client.get(f"/api/district/{code}").json()
         assert info["measured"]["min"] <= info["measured"]["current"] <= info["measured"]["max"]

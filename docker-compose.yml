@@ -3,10 +3,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: urban-green-planner:latest
-    container_name: urban-green-planner
-    ports:
-      - "8000:8000"
+    image: urban-heat-analysis-studio:latest
+    container_name: urban-heat-analysis-studio
+    network_mode: host
     environment:
       - PLANNER_DATA=/app/data
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://127.0.0.1:1234/v1}
+      - LLM_MODEL=${LLM_MODEL:-gemma-4-26b-a4b-it-qat}
+      - LLM_API_KEY=${LLM_API_KEY:-not-needed}
+      - LLM_TIMEOUT=${LLM_TIMEOUT:-120.0}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.3}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-2500}
     restart: unless-stopped

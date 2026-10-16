@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildLookup, findDefaultDistrict, computeTargetPreset } from './usePlanner.js'
+import { parseSSELine } from './api.js'
 
 test('buildLookup extracts district lookup and calculates city bounding boxes', () => {
   const meta = {
@@ -45,4 +46,12 @@ test('computeTargetPreset formats hectares appropriately for input', () => {
   assert.equal(computeTargetPreset(12.34), '12.4')
   assert.equal(computeTargetPreset(10), '10')
   assert.equal(computeTargetPreset(null), null)
+})
+
+test('parseSSELine parses token data, [DONE], error data, and ping comments', () => {
+  assert.deepEqual(parseSSELine('data: {"token": "Kentsel serinleme"}'), { token: 'Kentsel serinleme' })
+  assert.deepEqual(parseSSELine('data: [DONE]'), { done: true })
+  assert.deepEqual(parseSSELine('data: {"error": "LM Studio bağlantısı kurulamadı"}'), { error: 'LM Studio bağlantısı kurulamadı' })
+  assert.equal(parseSSELine(': ping'), null)
+  assert.equal(parseSSELine(''), null)
 })

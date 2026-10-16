@@ -29,6 +29,13 @@ class Planner:
     def __init__(self, data_dir: Path):
         t0 = time.time()
         data_dir = Path(data_dir)
+        # Auto-extract pre-packaged distribution archive if processed tables are missing
+        if not (data_dir / "processed" / "turkey_districts_master.geojson").exists():
+            zip_file = data_dir / "data_package.zip"
+            if zip_file.exists():
+                import zipfile
+                with zipfile.ZipFile(zip_file, "r") as zf:
+                    zf.extractall(data_dir)
         self.tables = load_tables(data_dir / "processed")
         self.table, self.weather, self.features = build_model_table(self.tables)
         self.base = build_base_rows(self.table, self.weather).set_index("district_code", drop=False)
@@ -188,12 +195,12 @@ class Planner:
         """All districts, simplified (about 1.6 MB): code, name, city, whether it has a result, and the risk score for the colours."""
         if self._overview is None:
             d = self.tables["districts"][["district_code", "city_code", "district_name", "city_name", "geometry"]].copy()
-            d["geometry"] = d["geometry"].simplify(0.004, preserve_topology=True)
+            d["geometry"] = d["geometry"].simplify(0.0002, preserve_topology=True)
             d["has_data"] = d["district_code"].isin(self.base.index)
             d["risk_score"] = d["district_code"].map(self.risk["risk_score"]).round(1)
             collection = json.loads(d.to_json(drop_id=True))
             for feature in collection["features"]:
-                feature["geometry"]["coordinates"] = _round_coordinates(feature["geometry"]["coordinates"])
+                feature["geometry"]["coordinates"] = _round_coordinates(feature["geometry"]["coordinates"], 5)
                 if pd.isna(feature["properties"]["risk_score"]):
                     feature["properties"]["risk_score"] = None
             self._overview = json.dumps(collection, separators=(",", ":"))

@@ -4,8 +4,12 @@ import Selectors from './components/Selectors.jsx'
 import WhatIfPanel from './components/WhatIfPanel.jsx'
 import RiskPanel from './components/RiskPanel.jsx'
 import HistoryPanel from './components/HistoryPanel.jsx'
+import LLMReportCard from './components/LLMReportCard.jsx'
+import { useTranslation } from './i18n.js'
+import { fmt, pct } from './format.js'
 
 export default function App() {
+  const { lang, setLang, t } = useTranslation()
   const { state, actions } = usePlanner()
   const {
     meta, overview, topRisk, cityCode, districtCode, info, noResult,
@@ -20,19 +24,34 @@ export default function App() {
   return (
     <div className="page studio-layout">
       <header className="header">
-        <div className="header-brand">
-          <h1>Kentsel Yeşil Planlayıcı</h1>
-          <span className="badge">Türkiye Kentsel Isı Adası & Yeşil Simülasyonu</span>
+        <div className="header-top">
+          <div className="header-brand">
+            <h1>{t('headerTitle')}</h1>
+            <span className="badge">{t('headerBadge')}</span>
+          </div>
+          <div className="header-actions">
+            <button
+              type="button"
+              className="lang-toggle-btn"
+              onClick={() => setLang(lang === 'en' ? 'tr' : 'en')}
+              title={lang === 'en' ? 'Türkçe arayüze geç' : 'Switch to English'}
+              aria-label="Change language"
+            >
+              <span className={lang === 'en' ? 'lang-active' : ''}>EN</span>
+              <span className="lang-sep">|</span>
+              <span className={lang === 'tr' ? 'lang-active' : ''}>TR</span>
+            </button>
+          </div>
         </div>
         <p className="header-subtitle">
-          İlçelere eklenecek kentsel yeşil dokunun yaz yüzey sıcaklığına etkisini simüle edin · Landsat 8/9 & ERA5 (2013–2025) · 829 ilçe
+          {t('headerSubtitle')}
         </p>
       </header>
 
       {failed && (
         <p className="notice warn">
-          Sunucuya ulaşılamadı. Arka uç çalışıyor mu? (<code>uvicorn backend.main:app --port 8000</code>)
-          <button type="button" onClick={retryAll}>Yeniden dene</button>
+          {t('serverError')}
+          <button type="button" onClick={retryAll}>{t('retry')}</button>
         </p>
       )}
 
@@ -72,10 +91,10 @@ export default function App() {
             <div className="district-identity">
               <h2>{info.name} <small>({info.city_name})</small></h2>
               <div className="identity-tags">
-                <span>Bölge: <b>{info.region}</b></span>
-                <span>Yapılaşmış Alan: <b>{info.urban_km2} km²</b></span>
-                <span>Mevcut Yeşil Payı: <b>%{(info.green_share * 100).toFixed(1)}</b></span>
-                <span>Yaz Sıcaklığı: <b>{info.measured.current} °C</b></span>
+                <span>{t('regionLabel')}: <b>{info.region}</b></span>
+                <span>{t('builtUpLabel')}: <b>{fmt(info.urban_km2, 1, lang)} km²</b></span>
+                <span>{t('currentGreenLabel')}: <b>{pct(info.green_share, 1, lang)}</b></span>
+                <span>{t('summerLSTLabel')}: <b>{fmt(info.measured.current, 1, lang)} °C</b></span>
               </div>
             </div>
           )}
@@ -86,21 +105,21 @@ export default function App() {
               className={tab === 'whatif' ? 'on' : ''}
               onClick={() => setTab('whatif')}
             >
-              🌿 Yeşil Senaryosu
+              {t('tabWhatif')}
             </button>
             <button
               role="tab"
               className={tab === 'risk' ? 'on' : ''}
               onClick={() => setTab('risk')}
             >
-              ⚠️ Risk & Öncelik
+              {t('tabRisk')}
             </button>
             <button
               role="tab"
               className={tab === 'history' ? 'on' : ''}
               onClick={() => setTab('history')}
             >
-              📈 Tarihçe & Kıyas
+              {t('tabHistory')}
             </button>
           </div>
 
@@ -136,9 +155,17 @@ export default function App() {
         </section>
       </main>
 
+      <LLMReportCard
+        districtCode={districtCode}
+        amount={amount}
+        unit={unit}
+        cooling={cooling}
+        districtName={info?.name}
+        enabled={!!districtCode && !failed && !infoError && !noResult}
+      />
+
       <footer className="footer">
-        Veriler: Landsat 8/9 yaz yüzey sıcaklığı ve yeşil pay (Temmuz–Ağustos), ERA5 iklim verisi, TÜİK nüfus, SEGE-2022.
-        Yüzey sıcaklığı yapılaşmış alanın sıcaklığıdır (hava sıcaklığı değil). Sonuçlar ilçeler arası ilişkilerden öğrenilmiş ampirik makine öğrenmesi tahminleridir. 829 ilçe için sonuç vardır; 144 kırsal/küçük ilçe metodolojik olarak kapsam dışıdır.
+        {t('footerText')}
       </footer>
     </div>
   )

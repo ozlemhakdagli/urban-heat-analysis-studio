@@ -1,12 +1,30 @@
-// Turkish number formats: decimal comma, thousands dot.
-const nf = (digits) => new Intl.NumberFormat('tr-TR', { minimumFractionDigits: digits, maximumFractionDigits: digits })
-export const fmt = (value, digits = 1) => (value === null || value === undefined || Number.isNaN(value) ? '–' : nf(digits).format(value))
-export const signed = (value, digits = 1) => {
-  if (value === null || value === undefined) return '–'
-  const zero = Number(Math.abs(value).toFixed(digits)) === 0 // -0.001 is shown as 0,00 without a sign
-  return `${zero ? '' : value > 0 ? '+' : '−'}${nf(digits).format(Math.abs(value))}`
+// Number formats with English/Turkish locale support and cached Intl formatters
+const nfCache = new Map()
+const nf = (digits, lang = 'en') => {
+  const key = `${lang}:${digits}`
+  let formatter = nfCache.get(key)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(lang === 'tr' ? 'tr-TR' : 'en-US', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    })
+    nfCache.set(key, formatter)
+  }
+  return formatter
 }
-export const pct = (share, digits = 1) => `%${fmt(share * 100, digits)}`
+
+export const fmt = (value, digits = 1, lang = 'en') =>
+  value === null || value === undefined || Number.isNaN(value) ? '–' : nf(digits, lang).format(value)
+
+export const signed = (value, digits = 1, lang = 'en') => {
+  if (value === null || value === undefined) return '–'
+  const zero = Number(Math.abs(value).toFixed(digits)) === 0
+  return `${zero ? '' : value > 0 ? '+' : '−'}${nf(digits, lang).format(Math.abs(value))}`
+}
+
+export const pct = (share, digits = 1, lang = 'en') =>
+  lang === 'tr' ? `%${fmt(share * 100, digits, lang)}` : `${fmt(share * 100, digits, lang)}%`
+
 // one point of green share is 1% of the built-up area; that area is urban_km2 x 100 ha
 export const pointsToHa = (points, urbanKm2) => points * urbanKm2
 export const collator = new Intl.Collator('tr')

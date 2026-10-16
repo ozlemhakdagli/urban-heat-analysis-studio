@@ -14,10 +14,11 @@ from typing import Literal
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, field_validator
 
+from .planner.llm import build_prompt_data, render_prompt, stream_chat_completion
 from .planner.service import NoResult, Planner
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,6 +60,7 @@ class WhatIfRequest(BaseModel):
     amount: float  # area of green added (negative = green lost)
     unit: Literal["m2", "ha", "km2"] = "m2"
     cooling: float = 1.0  # the wanted cooling in °C for the heat-target answer
+    lang: Literal["en", "tr"] = "en"
 
     @field_validator("amount")
     @classmethod
@@ -104,6 +106,16 @@ def district(code: int):
 @app.post("/api/whatif")
 def what_if(request: WhatIfRequest):
     return _district_or_404(planner().what_if, request.district_code, request.amount, request.unit, request.cooling)
+
+
+@app.post("/api/llm/interpret")
+async def interpret(request: WhatIfRequest):
+    p = planner()
+    whatif_res = _district_or_404(p.what_if, request.district_code, request.amount, request.unit, request.cooling)
+    d_info = _district_or_404(p.district, request.district_code)
+    prompt_data = build_prompt_data(d_info, whatif_res, lang=request.lang)
+    messages = render_prompt(prompt_data, lang=request.lang)
+    return StreamingResponse(stream_chat_completion(messages), media_type="text/event-stream")
 
 
 @app.get("/api/top-risk")

@@ -1,0 +1,37 @@
+# Environment for the notebooks that work on the processed data (eda, modeling, whatif, risk) and for the backend of the app (backend/).
+#   conda env create -f environment.yml
+#   conda activate urban-green-planner
+# Tested with Python 3.12, numpy 2.5, pandas 3.0, scikit-learn 1.9, geopandas 1.2, xgboost 3.4, lightgbm 4.7, catboost 1.2, optuna 5.0, fastapi 0.143.
+# The front end (frontend/) needs Node.js 22 and npm: cd frontend && npm install && npm run build
+# `py-xgboost-cpu` is the CPU build of XGBoost (the pip package also downloads large GPU libraries that are not needed here).
+#
+# Only needed to REBUILD the processed tables from the raw downloads (notebooks/preprocessing.ipynb): omfiles, s3fs, earthengine-api
+# (pip install omfiles s3fs earthengine-api) and your own Google account for Earth Engine. Not needed to use the processed tables.
+name: urban-green-planner
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy>=2.0
+  - pandas>=3.0
+  - scipy
+  - scikit-learn>=1.6
+  - matplotlib
+  - seaborn
+  - geopandas>=1.0
+  - pyogrio
+  - py-xgboost-cpu
+  - lightgbm
+  - catboost
+  - optuna
+  - shap
+  - joblib
+  - threadpoolctl
+  - fastapi
+  - uvicorn
+  - httpx
+  - pyyaml>=6.0
+  - openai>=1.50
+  - pyarrow
+  - ipykernel
+  - nbconvert

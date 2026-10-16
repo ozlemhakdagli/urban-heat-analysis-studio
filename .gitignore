@@ -185,9 +185,10 @@ ipython_config.py
 #   git rm -r .ipynb_checkpoints/
 
 ### Project Custom Ignores ###
-# Data directory: ignore all datasets, models and local results, but preserve documentation
+# Data directory: ignore raw datasets, but preserve documentation and distribution archives
 /data/*
 !/data/README.md
+!/data/*.zip
 
 # Node / Frontend
 node_modules/
@@ -202,6 +203,7 @@ pnpm-debug.log*
 # Environment & local secrets
 .env
 .env.*
+!.env.example
 *.local
 
 # IDEs & OS files

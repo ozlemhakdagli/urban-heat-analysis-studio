@@ -1,4 +1,5 @@
 import { fmt, riskColor } from '../format.js'
+import { useTranslation } from '../i18n.js'
 
 function Bar({ label, value, hint }) {
   return (
@@ -10,51 +11,53 @@ function Bar({ label, value, hint }) {
 }
 
 export default function RiskPanel({ info, topRisk, onPick }) {
+  const { lang, t } = useTranslation()
   const r = info && info.risk
+
   return (
     <div className="risk">
-      {!r && <p className="empty">Bir ilçe seçtiğinizde risk skoru burada görünür. Aşağıda en riskli 20 ilçe var; birine tıklayarak seçebilirsiniz.</p>}
+      {!r && <p className="empty">{t('riskEmptyPrompt')}</p>}
       {r && (
         <>
           <div className="headline">
-            <div className="big" style={{ color: riskColor(r.score) }}>{fmt(r.score, 0)}<small> / 100</small></div>
+            <div className="big" style={{ color: riskColor(r.score) }}>{fmt(r.score, 0, lang)}<small> / 100</small></div>
             <div className="big-text">
-              Risk sırası <b>{r.rank} / {r.n}</b>
-              <div className="muted">Örneklenen ağırlık setlerinde sıra duyarlılık aralığı {r.rank_low}–{r.rank_high} · bu setlerin %{fmt(r.top_share * 100, 0)}’inde ilk %10’da</div>
+              {t('riskRankOutOf', { rank: r.rank, total: r.n })}
+              <div className="muted">{t('riskSensitivity', { low: r.rank_low, high: r.rank_high, share: fmt(r.top_share * 100, 0, lang) })}</div>
             </div>
           </div>
-          <Bar label="Isı (tehlike)" value={r.components.hazard_pct} hint={`son yaz ${fmt(info.compare.recent_lst)} °C`} />
-          <Bar label="Maruz kalan kırılgan nüfus" value={r.components.exposure_pct} hint={`${fmt(r.vulnerable_people, 0)} kişi (0–4 ve 65+ yaş)`} />
-          <Bar label="Gelişmişlik düşüklüğü" value={r.components.vulnerability_pct} hint="SEGE-2022" />
+          <Bar label={t('barHazard')} value={r.components.hazard_pct} hint={t('barHazardHint', { temp: fmt(info.compare.recent_lst, 1, lang) })} />
+          <Bar label={t('barExposure')} value={r.components.exposure_pct} hint={t('barExposureHint', { count: fmt(r.vulnerable_people, 0, lang) })} />
+          <Bar label={t('barVulnerability')} value={r.components.vulnerability_pct} hint={t('barVulnerabilityHint')} />
           <p className="muted">
             {r.priority_rank
-              ? <>Öncelik sırası: <b>{r.priority_rank} / {r.n_priority}</b> (kırılgan kişi ÷ 1 °C için gereken hektar; yalnızca sıralama içindir, mutlak sayı değildir).</>
-              : <>Bu ilçede 1 °C serinlemeye ulaşılamadığı için öncelik sırası yok.</>}
+              ? t('priorityRank', { rank: r.priority_rank, total: r.n_priority })
+              : t('priorityUnreachable')}
           </p>
           {(Number.isFinite(r.priority_reachability) || Number.isFinite(r.priority_rank_low) || Number.isFinite(r.priority_top20_share)) && (
             <p className="muted">
-              {Number.isFinite(r.priority_reachability) && <>Model örneklerinin %{fmt(r.priority_reachability * 100, 0)}’inde 1 °C hedefi erişilebilir.</>}
-              {Number.isFinite(r.priority_rank_low) && Number.isFinite(r.priority_rank_high) && <> Hedefe ulaşılabilen örneklerde öncelik sırası duyarlılık aralığı: {fmt(r.priority_rank_low, 0)}–{fmt(r.priority_rank_high, 0)}.</>}
-              {Number.isFinite(r.priority_top20_share) && <> Tüm örneklerin %{fmt(r.priority_top20_share * 100, 0)}’inde ilk 20 öncelik içinde.</>}
+              {Number.isFinite(r.priority_reachability) && t('priorityReachability', { share: fmt(r.priority_reachability * 100, 0, lang) })}{' '}
+              {Number.isFinite(r.priority_rank_low) && Number.isFinite(r.priority_rank_high) && t('priorityRankRange', { low: fmt(r.priority_rank_low, 0, lang), high: fmt(r.priority_rank_high, 0, lang) })}{' '}
+              {Number.isFinite(r.priority_top20_share) && t('priorityTop20Share', { share: fmt(r.priority_top20_share * 100, 0, lang) })}
             </p>
           )}
-          {r.small_area && <p className="notice warn">Küçük yapılaşmış alan, hektar başına öncelik oranını yükseltebilir; nüfus kapsamı ve alan ölçümünü birlikte değerlendirin.</p>}
+          {r.small_area && <p className="notice warn">{t('smallAreaRiskWarning')}</p>}
         </>
       )}
-      <h4>En riskli 20 ilçe (Tıklayıp Senaryoya Geçin)</h4>
+      <h4>{t('top20RiskTitle')}</h4>
       <ol className="toplist">
-        {topRisk.map((t) => (
-          <li key={t.code} className={info && info.code === t.code ? 'on' : ''}>
-            <button onClick={() => onPick(t.code, 'whatif')} title="Bu ilçeyi seç ve yeşil senaryosuna geç">
-              <span className="rank">{t.rank}</span>
-              <span className="name">{t.name} <small>{t.city_name}</small></span>
-              <span className="score" style={{ background: riskColor(t.score) }}>{fmt(t.score, 0)}</span>
-              <span className="action-hint">Senaryoyu Aç →</span>
+        {topRisk.map((tItem) => (
+          <li key={tItem.code} className={info && info.code === tItem.code ? 'on' : ''}>
+            <button onClick={() => onPick(tItem.code, 'whatif')} title={t('top20ItemTooltip')}>
+              <span className="rank">{tItem.rank}</span>
+              <span className="name">{tItem.name} <small>{tItem.city_name}</small></span>
+              <span className="score" style={{ background: riskColor(tItem.score) }}>{fmt(tItem.score, 0, lang)}</span>
+              <span className="action-hint">{t('actionOpenScenario')}</span>
             </button>
           </li>
         ))}
       </ol>
-      <p className="fine">Risk skoru bir sıralama aracıdır, ölçüm değildir: ısı, kırılgan nüfus sayısı ve düşük gelişmişliğin eşit ağırlıklı ortalaması.</p>
+      <p className="fine">{t('riskDisclaimer')}</p>
     </div>
   )
 }

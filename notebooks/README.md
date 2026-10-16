@@ -1,8 +1,8 @@
 # Notebooks Directory Documentation (`notebooks/README.md`)
 
-This directory houses the complete analytical, empirical, and machine learning pipeline for the **AI-Driven Urban Green Planner** project. 
+This directory houses the complete analytical, empirical, and machine learning pipeline for the **Urban Heat Analysis Studio** project. 
 
-The notebooks are designed as **self-contained research and engineering modules**: they explore the empirical data, conduct hyperparameter searches, train the production model, evaluate what-if scenarios, and export all verified artifacts required by the live web application.
+The notebooks are designed as **self-contained research and engineering modules**: they explore the empirical data, conduct hyperparameter searches, train the production model, evaluate what-if scenarios, and export all verified artifacts required by the live **Urban Heat Analysis Studio** web application.
 
 ---
 
@@ -49,6 +49,14 @@ The analysis follows a strict, sequential pipeline. Each notebook builds directl
 
 ### 1. [`preprocessing.ipynb`](preprocessing.ipynb) — Data Engineering & Harmonization
 * **Purpose:** Serves as the extract, transform, and load (ETL) pipeline. It reads raw primary sources and compiles them into clean, standardized master datasets.
+
+> [!NOTE]
+> **Pre-Packaged Data Package (`data_package.zip`):**
+> Users do not need to run data engineering from raw UN OCHA / GEE files unless recalculating primary sources; `data/data_package.zip` (31.8 MB) is provided in the repository and provides all pre-built `data/processed/*`, `data/models/*`, and `data/results/*` directly via:
+> ```bash
+> unzip data/data_package.zip -d data/
+> ```
+
 * **Key Tasks:**
   1. **Central Reference Table:** Constructs `turkey_city_district_code_table.csv` by matching TÜİK MEDAS settlement tables, providing a verified 1:1 mapping for all 973 districts and 81 provinces.
   2. **Spatial Boundaries & Centroids:** Ingests UN OCHA GeoJSON shapes, validates spatial centroids (100% point-in-polygon verification), and exports `turkey_districts_master.geojson` and `turkey_cities_master.geojson`.
@@ -62,7 +70,7 @@ The analysis follows a strict, sequential pipeline. Each notebook builds directl
 ### 2. [`eda.ipynb`](eda.ipynb) — Exploratory Data Analysis & Spatial Dynamics
 * **Purpose:** Investigates the spatial, temporal, and demographic structure of the district data before model design.
 * **Empirical Discoveries:**
-  * **The 829-District Reliability Filter:** Districts with built-up area $\text{urban\_km2} \ge 0.5$ and satellite clear-sky cover $\ge 0.50$ provide consistent physical signals (**829 reliable districts** across 80 provinces; 144 rural/small districts excluded).
+  * **The 829-District Reliability Filter:** Districts with built-up area `urban_km2` ≥ 0.5 km² and satellite clear-sky cover ≥ 0.50 provide consistent physical signals (**829 reliable districts** across 80 provinces; 144 rural/small districts excluded).
   * **Within-City Variation vs. Raw Geography:** Proves that raw numbers can be misleading due to macro-geography (e.g., latitude and elevation show inverted raw correlations across Turkey). De-meaning features against their city-year mean (`..._vs_city`) isolates the true local relationship between green space and surface temperature (correlation -0.43).
   * **Variance Decomposition:** Demonstrates that summer surface temperature is 65% geography (between cities), 17% local district differences, and 18% inter-annual weather. Green space varies primarily between districts (59%), not over time.
   * **Validation Split Integrity:** Confirms that a 2013–2022 train vs. 2023–2025 test temporal split is balanced and free of data leakage (adversarial AUC 0.71–0.73 without weather).
@@ -107,7 +115,7 @@ The analysis follows a strict, sequential pipeline. Each notebook builds directl
     3. *Vulnerability (Hassasiyet):* Inverted SEGE-2022 score (socio-economic disadvantage).
   * **Risk Score:** Arithmetic mean of the three components.
   * **Dirichlet Sensitivity Analysis:** 500 Dirichlet random weight sets evaluate rank stability, supplying a 5th–95th percentile rank range for every district.
-  * **Intervention Priority:** Ranked by vulnerable population protected per hectare of green needed for $-1^\circ\text{C}$ cooling ($\text{vulnerable\_people} / \text{hectares}_{1^\circ\text{C}}$), conditional on reachability.
+  * **Intervention Priority:** Ranked by vulnerable population protected per hectare of green needed for -1.0 °C cooling (`vulnerable_people` / `hectares_1c`), conditional on reachability.
 * **Output:** Generates and exports the complete [`data/results/district_scorecard.csv`](../data/results/district_scorecard.csv) (829 districts × 45 analytical columns).
 
 ---
@@ -122,12 +130,12 @@ The analysis follows a strict, sequential pipeline. Each notebook builds directl
 
 ## 🔗 Connection to the Live Web Application (`backend/`)
 
-The web application does **not** execute Jupyter notebooks at runtime:
-1. **Model Loading:** The FastAPI backend directly loads the verified artifacts exported by Notebooks 3 and 4:
+The **Urban Heat Analysis Studio** web application does **not** execute Jupyter notebooks at runtime:
+1. **Model Loading:** The **Urban Heat Analysis Studio** FastAPI backend directly loads the verified artifacts exported by Notebooks 3 and 4:
    * `../data/models/final_model.ubj` (XGBoost binary model for live inference)
    * `../data/models/model_card.json` (feature schemas and air-temperature transformation parameters)
    * `../data/models/bootstrap_effects.npz` (pre-computed confidence interval bands)
-2. **Dynamic In-Memory Computation:** When a user requests a green space addition in the frontend, the backend runs live inference in under 15 milliseconds.
+2. **Dynamic In-Memory Computation:** When a user requests a green space addition in the **Urban Heat Analysis Studio** frontend, the backend runs live inference in under 15 milliseconds.
 3. **Automated Parity Verification:** Run the test suite to ensure the live backend math matches the notebook outputs to the last decimal place:
    ```bash
    python -m backend.tests.parity
